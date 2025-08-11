@@ -1,0 +1,84 @@
+version: "3.9"
+
+networks:
+  home_net:
+    driver: overlay
+    attachable: true
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    networks: [home_net]
+    ports:
+      - target: 1883
+        published: 1883
+        protocol: tcp
+        mode: host
+      - target: 9001
+        published: 9001
+        protocol: tcp
+        mode: host
+    volumes:
+      - /srv/home-automation/mosquitto/config:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 0
+        window: 30s
+
+  homeassistant:
+    image: ghcr.io/home-assistant/home-assistant:stable
+    networks: [home_net]
+    ports:
+      - target: 8123
+        published: 8123
+        protocol: tcp
+        mode: host
+    volumes:
+      - /srv/home-automation/homeassistant:/config
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=UTC
+    depends_on: [mosquitto]
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 0
+        window: 30s
+      placement:
+        constraints:
+          - node.role == manager
+
+  nodered:
+    image: nodered/node-red:latest
+    networks: [home_net]
+    ports:
+      - target: 1880
+        published: 1880
+        protocol: tcp
+        mode: host
+    volumes:
+      - /srv/home-automation/node-red:/data
+    environment:
+      - TZ=UTC
+    depends_on: [mosquitto]
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+        max_attempts: 0
+        window: 30s
+      placement:
+        constraints:
+          - node.role == manager

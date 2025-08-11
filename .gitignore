@@ -1,0 +1,22 @@
+# Home Assistant state & secrets
+homeassistant/.storage/
+homeassistant/.cloud/
+homeassistant/*.db*
+homeassistant/*.log
+homeassistant/secrets.yaml
+homeassistant/**/secrets.yaml
+
+# Node-RED sensitive bits
+node-red/*cred*.json
+
+# Mosquitto runtime
+mosquitto/data/
+mosquitto/log/
+
+# Local overrides
+.env
+
+# OS / editor junk
+.DS_Store
+Thumbs.db
+
